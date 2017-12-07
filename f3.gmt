@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+ echo hello $Hello
+
+head -287 DistInty.txt > tableD.txt
+head -403 DistInty.txt | tail -15 > tableB.txt
+head -387 DistInty.txt | tail -15 > tableC.txt
+tail -116 DistInty.txt | head -41 > tableA.txt
+tail -74 DistInty.txt | head -41 >> tableA.txt
+
+gmt psxy tableA.txt -JX12/10 -R50/2000/0/18 -P -Bxa500+l"distance (km)" -Bya1+l"Intensity" -BwSnE > f1.ps

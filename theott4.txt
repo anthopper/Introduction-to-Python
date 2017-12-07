@@ -1,0 +1,76 @@
+#!/usr/bin/python
+# provide relevant parameter values up front:
+Planet = ['homogeneous Earth',6371.,11.]
+
+# only import functions that are needed, it keeps the program agile
+from math import radians, sin, sqrt
+
+# set constants; separate separate Python statements by a semicolon
+R = Planet[1] ; vp = Planet[2]
+
+# set origin time of earthquake
+Oh=4; Om=49; Os=20
+
+# initialize lists that will be filled in with file content or calculations
+dists = []; times = []; res3 = []
+
+# open the data file
+ptm = open('Ptimes.txt','r')
+# loop over lines in the file and extract relevant columns/fields
+# also "decrypt" the time, subtract earthquake origin time, and convert to seconds
+for line in ptm:
+    fields = line.split()
+    if fields[6]=='P' or fields[6]=='Pn':
+        time = fields[7].split('Z')[0].split('T')[1].split(':')
+        seconds = 3600*(float(time[0])-Oh)+60*(float(time[1])-Om)+float(time[2])-Os
+        dists = dists + [float(fields[4])]
+        times = times + [seconds] 
+        res3 = res3 + [float(fields[9])]
+timez = np.array(times)
+distancez = np.array(dists)
+
+# lists are already sorted by increasing epicentral distance.
+distances = dists; t0s = times
+
+# infer theoretical travel times used by the USGS:
+# also, use "list comprehension"
+t3s = [t-r for t,r in zip(t0s,res3)]
+
+# modules can be imported at any time
+#import travelmethods
+from travelmethods import *
+# get lists of theoretical travel times using the "surface" and "chord" methods:
+t1s = [t1(d,R,vp) for d in distances]
+t2s = [t2(d,R,vp) for d in distances]
+# calculate the travel time residuals for these two sets of theoretical travel times:
+res1 = [t0-t1 for t0,t1 in zip(t0s,t1s)]
+res2 = [t0-t2 for t0,t2 in zip(t0s,t2s)]
+
+# compute and print mean residuals and standard deviations:
+n = len(distances)
+mu1 = sum(res1)/n
+mu2 = sum(res2)/n
+mu3 = sum(res3)/n
+sigma1 = sqrt(sum([(r1-mu1)**2 for r1 in res1])/n)
+sigma2 = sqrt(sum([(r2-mu2)**2 for r2 in res2])/n)
+sigma3 = sqrt(sum([(r3-mu3)**2 for r3 in res3])/n)
+print('residuals 1: %g +/- %g' % (mu1,sigma1))
+print('residuals 2: %g +/- %g' % (mu2,sigma2))
+print('residuals 3: %g +/- %g' % (mu3,sigma3))
+
+from matplotlib.pyplot import *
+subplot(1,2,1)
+plot(distances,t0s,'.')
+plot(distances,t1s)
+plot(distances,t2s)
+plot(distances,t3s)
+xlabel("Epicentral distance (degrees)")
+ylabel("P-wave travel time (seconds)")
+subplot(1,2,2)
+hist(res1,60,range=(-200,100),alpha=0.7)
+hist(res2,60,range=(-200,100),alpha=0.7)
+hist(res3,60,range=(-200,100),alpha=0.7)
+xlabel("P wave delay times (seconds)")
+ylabel("count")
+show()
+#python -m timeit "5**0.5"

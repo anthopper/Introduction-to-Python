@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+tail -n +2 Mexico7.1 | awk -F, '{print $6, $5, $2}' > Mexico.xyi
+xyz2grd  Mexico.xyi  -Ddegree/degree/mGal/1/0/"Hawaiian   Gravity"/"GRS-80 Ellipsoid used" -GMexico.grd -R198/208/18/25  -I0.5m -V
+gmt grdimage Mexico.grd -JL -R -Cmercalli.cpt -K -O >> map.ps
